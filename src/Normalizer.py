@@ -28,7 +28,8 @@ def get_audio_list(path):
     Returns list of path names to the audiofiles that are used
     by clone hero in the given path
     """
-    used_audio = ['crowd', 'song', 'guitar', 'drums1', 'drums2', 'drums3', 'drums4', 'rhythm', 'vocals', 'keys']
+    used_audio = ['crowd', 'song', 'guitar', 'drums1', 'drums2',
+                  'drums3', 'drums4', 'rhythm', 'vocals', 'keys']
     audio_list = []
     for ext in ('{}\\*.mp3'.format(path), '{}\\*.ogg'.format(path)):
         for audio_path in glob.glob(ext):
@@ -44,7 +45,8 @@ try:
     # Find all songs
     for root, dirs, files in os.walk(INPUT_FOLDER):
         # print(root)
-        if os.path.isfile('{}\\notes.chart'.format(root)) or os.path.isfile('{}\\notes.mid'.format(root)):
+        if os.path.isfile('{}\\notes.chart'.format(root)) or
+           os.path.isfile('{}\\notes.mid'.format(root)):
             # print("Found song: ", root)
             songs.append((root, files))
 
@@ -61,8 +63,10 @@ try:
             for audio_path in get_audio_list(path):
                 stat = os.stat(audio_path)
                 audio_name = audio_path.rpartition('\\')[2]
-                # Don't skip this song if audiofile not in cache, or has been changed since caching
-                if audio_name not in cache[path] or cache[path][audio_name] != stat[8]:
+                # Don't skip this song if audiofile not in cache,
+                # or has been changed since caching
+                if audio_name not in cache[path] or
+                   cache[path][audio_name] != stat[8]:
                     skip = False
         else:
             skip = False

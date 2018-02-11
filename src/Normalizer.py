@@ -5,8 +5,9 @@ os.environ['PATH'] = os.environ['PATH'] + ';{}\\FFmpeg\\bin;'.format(sys.path[0]
 
 import pydub
 
-
+# Volume level below max songs should be adjusted to
 GAIN = -16
+# Skip recoding if song is HEADROOM dB within GAIN
 HEADROOM = 1
 
 INPUT_FOLDER = 'Songs'

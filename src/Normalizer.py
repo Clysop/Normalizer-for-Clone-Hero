@@ -135,7 +135,7 @@ try:
 
             print()
         else:
-            print("Song within 1 dB, copying...\n")
+            print("Song within {} dB, copying...\n".format(HEADROOM))
 
         # Copy remaining files
         for f in files:

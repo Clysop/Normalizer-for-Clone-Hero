@@ -37,7 +37,7 @@ def get_audio_list(path):
     return audio_list
 
 try:
-    # List of paths to all subdirectories that contain songs
+    # List of paths to all (subdirectories, files in that dir) that contain songs
     songs = []
 
     # Find all songs
@@ -122,7 +122,7 @@ try:
 
             for audio, file_name, info in audio_files:
                 audio = audio.apply_gain(GAIN - song_gain)
-                
+
                 print("Exporting ", file_name)
                 try:
                     audio.export('{}/{}'.format(new_path, file_name),

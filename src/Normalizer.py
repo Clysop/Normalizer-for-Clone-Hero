@@ -1,15 +1,18 @@
 import json, time, sys, os, shutil, glob
 
+# Add local FFmpeg to path so pydub can use it
 os.environ['PATH'] = os.environ['PATH'] + ';{}\\FFmpeg\\bin;'.format(sys.path[0].rpartition('\\')[0])
 
 import pydub
 
 
 GAIN = -16
+HEADROOM = 1
+
 INPUT_FOLDER = 'Songs'
 OUTPUT_FOLDER = 'Normalized'
 
-
+# Initalize cache
 if os.path.isfile('normalizer_cache.json'):
     with open('normalizer_cache.json',) as cache_file:
         cache = json.load(cache_file)
@@ -18,7 +21,12 @@ else:
     with open('normalizer_cache.json', 'w') as cache_file:
         json.dump(cache, cache_file, indent=2)
 
+
 def get_audio_list(path):
+    """
+    Returns list of path names to the audiofiles that are used
+    by clone hero in the given path
+    """
     used_audio = ['crowd', 'song', 'guitar', 'drums1', 'drums2', 'drums3', 'drums4', 'rhythm', 'vocals', 'keys']
     audio_list = []
     for ext in ('{}\\*.mp3'.format(path), '{}\\*.ogg'.format(path)):
@@ -29,6 +37,7 @@ def get_audio_list(path):
     return audio_list
 
 try:
+    # List of paths to all subdirectories that contain songs
     songs = []
 
     # Find all songs
@@ -41,15 +50,9 @@ try:
     print("\nFound {} songs.".format(len(songs)))
     print()
 
-    # Apply gain to songs
-    num = 0
-    for path, files in songs:
-        num += 1
-        print("Song {}/{}".format(num, len(songs)))
-        song = False
-
-        audio_files = []
-        cache_data = {}
+    # Analyze, apply gain, then export songs
+    for num, (path, files) in enumerate(songs):
+        print("Song {}/{}".format(num + 1, len(songs)))
 
         # Scan cache for change
         skip = True
@@ -57,6 +60,7 @@ try:
             for audio_path in get_audio_list(path):
                 stat = os.stat(audio_path)
                 audio_name = audio_path.rpartition('\\')[2]
+                # Don't skip this song if audiofile not in cache, or has been changed since caching
                 if audio_name not in cache[path] or cache[path][audio_name] != stat[8]:
                     skip = False
         else:
@@ -67,6 +71,12 @@ try:
             print("In cache, skipping\n")
             continue
 
+        # List of (audiosegment, filename, mediainfo) in current song directory
+        audio_files = []
+        # Dict of audio_filename: last modified
+        cache_data = {}
+
+        song = False
         error = False
 
         # Create one song from all audio files in dir
@@ -74,11 +84,11 @@ try:
             if not song:
                 print("Scanning song:", audio_path)
                 song = pydub.AudioSegment.from_file(audio_path)
-                audio_files.append((song, audio_path, pydub.utils.mediainfo(audio_path)))
+                audio_files.append((song, audio_path.rpartition('\\')[2], pydub.utils.mediainfo(audio_path)))
             else:
                 print(" Adding layer:", audio_path)
                 layer = pydub.AudioSegment.from_file(audio_path)
-                audio_files.append((layer, audio_path, pydub.utils.mediainfo(audio_path)))
+                audio_files.append((layer, audio_path.rpartition('\\')[2], pydub.utils.mediainfo(audio_path)))
                 song = song.overlay(layer)
 
             if not song:
@@ -106,13 +116,23 @@ try:
             os.makedirs(new_path)
 
         # Apply gain and export audio files to new dir
-        if abs(GAIN - song_gain) > 1:
-            print("Applying {:.1f} dB of gain...\n".format(GAIN - song_gain))
-            for audio, audio_path, info in audio_files:
+        # Skip if song within HEADROOM dB, and copy files instead
+        if abs(GAIN - song_gain) > HEADROOM:
+            print("Applying {:.1f} dB of gain...".format(GAIN - song_gain))
+
+            for audio, file_name, info in audio_files:
                 audio = audio.apply_gain(GAIN - song_gain)
-                audio.export('{}/{}'.format(new_path, audio_path.rpartition('\\')[2]),
-                             format=info['format_name'],
-                             bitrate=info['bit_rate'])
+                
+                print("Exporting ", file_name)
+                try:
+                    audio.export('{}/{}'.format(new_path, file_name),
+                                 format=info['format_name'],
+                                 bitrate=info['bit_rate'])
+                except KeyboardInterrupt: raise
+                except:
+                    print("Error exporting ", file_name)
+
+            print()
         else:
             print("Song within 1 dB, copying...\n")
 

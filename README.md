@@ -1,4 +1,4 @@
-# Normalizer-for-Clone-Hero
+# Normalizer for Clone Hero
 A small python app that normalizes the volume of a Clone Hero library
 
 How to use:

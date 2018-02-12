@@ -18,4 +18,4 @@ The program caches the work it has done, so you can exit it whenever you want, a
 
 The program will try to put everything to -16 dB, there's no way to change that. If people want it, I can add an option for it.
 
-The executable is generated with pyinstaller
+The executable is generated with pyinstaller, to use the one in this repository, FFmpeg must be added to the root folder.

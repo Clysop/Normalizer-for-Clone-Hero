@@ -1,4 +1,4 @@
-import json, time, sys, os, shutil, glob
+import json, time, sys, os, shutil, glob, traceback
 
 # Add local FFmpeg to path so pydub can use it
 os.environ['PATH'] = os.environ['PATH'] + ';{}\\FFmpeg\\bin;'.format(sys.path[0].rpartition('\\')[0])
@@ -45,8 +45,7 @@ try:
     # Find all songs
     for root, dirs, files in os.walk(INPUT_FOLDER):
         # print(root)
-        if os.path.isfile('{}\\notes.chart'.format(root)) or
-           os.path.isfile('{}\\notes.mid'.format(root)):
+        if os.path.isfile('{}\\notes.chart'.format(root)) or os.path.isfile('{}\\notes.mid'.format(root)):
             # print("Found song: ", root)
             songs.append((root, files))
 
@@ -65,8 +64,7 @@ try:
                 audio_name = audio_path.rpartition('\\')[2]
                 # Don't skip this song if audiofile not in cache,
                 # or has been changed since caching
-                if audio_name not in cache[path] or
-                   cache[path][audio_name] != stat[8]:
+                if audio_name not in cache[path] or cache[path][audio_name] < stat[8]:
                     skip = False
         else:
             skip = False
@@ -78,8 +76,6 @@ try:
 
         # List of (audiosegment, filename, mediainfo) in current song directory
         audio_files = []
-        # Dict of audio_filename: last modified
-        cache_data = {}
 
         song = False
         error = False
@@ -100,9 +96,6 @@ try:
                 print("Bad audiofile, skipping\n")
                 error = True
                 break
-
-            stat = os.stat(audio_path)
-            cache_data[audio_path.rpartition('\\')[2]] = stat[8]
 
         if error: continue
 
@@ -141,11 +134,17 @@ try:
         else:
             print("Song within {} dB, copying...\n".format(HEADROOM))
 
-        # Copy remaining files
+        # Dict of audio_filename: last modified
+        cache_data = {}
+
+        # Copy remaining files and get cache_data
         for f in files:
             if not os.path.isfile('{}\\{}'.format(new_path, f)):
                 # print("Copy", f)
                 shutil.copy('{}\\{}'.format(path, f), new_path)
+
+            if '{}\\{}'.format(path, f) in get_audio_list(path):
+                cache_data[f] = int(time.time())
 
         # Update cache
         cache[path] = cache_data
@@ -157,7 +156,7 @@ except KeyboardInterrupt:
 
 except Exception as e:
     print("Something went wrong:\n")
-    print(e)
+    traceback.print_exc()
     print()
 
 print("Press enter to exit")

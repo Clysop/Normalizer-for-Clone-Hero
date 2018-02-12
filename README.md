@@ -18,4 +18,4 @@ The program caches the work it has done, so you can exit it whenever you want, a
 
 The program will try to put everything to -16 dB, there's no way to change that. If people want it, I can add an option for it.
 
-I haven't tested it on anything other than my library, but it has worked great so far. The only problem is that it is very slow. It takes about 3 to 5 seconds per song, so I recommend leaving it on over night if you have more than 1000 songs. Since I haven't tested it much, it might crash in some cases, or it might not run at all for some people. I haven't tested it on any other PCs than mine. Please don't hesitate to report any crashes.
+The executable is generated with pyinstaller

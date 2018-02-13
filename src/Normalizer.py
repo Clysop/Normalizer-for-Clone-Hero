@@ -106,10 +106,13 @@ try:
         audio_files.sort(key=sort_audio, reverse=True)
 
         # Create one song from all layers
-        sample_rate = int(audio_files[0][2]['sample_rate'].split('.')[0])
-        song = pydub.AudioSegment.silent(len(audio_files[0][0]), frame_rate=sample_rate)
-        for audio, audio_path, info in audio_files:
-            song = song.overlay(audio)
+        if len(audio_files) > 1:
+            sample_rate = int(audio_files[0][2]['sample_rate'].split('.')[0])
+            song = pydub.AudioSegment.silent(len(audio_files[0][0]), frame_rate=sample_rate)
+            for audio, audio_path, info in audio_files:
+                song = song.overlay(audio)
+        else:
+            song = audio_files[0][0]
 
         song_gain = song.dBFS
         print("Volume: {:.1f} dB".format(song_gain))

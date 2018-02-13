@@ -148,7 +148,7 @@ try:
             if not os.path.isfile(new_path + '\\' + filename):
                 shutil.copy(path + '\\' + filename, new_path)
 
-            if f in USED_AUDIO:
+            if filename in USED_AUDIO:
                 cache_data[filename] = int(time.time())
 
         # Update cache

@@ -43,8 +43,7 @@ try:
             # print("Found song: ", root)
             songs.append((root, files))
 
-    print("\nFound {} songs.".format(len(songs)))
-    print()
+    print("Found {} songs.\n".format(len(songs)))
 
     # Analyze, apply gain, then export songs
     for num, (path, files) in enumerate(songs):
@@ -107,7 +106,8 @@ try:
         audio_files.sort(key=sort_audio, reverse=True)
 
         # Create one song from all layers
-        song = pydub.AudioSegment.silent(len(audio_files[0][0]))
+        sample_rate = int(audio_files[0][2]['sample_rate'].split('.')[0])
+        song = pydub.AudioSegment.silent(len(audio_files[0][0]), frame_rate=sample_rate)
         for audio, audio_path, info in audio_files:
             song = song.overlay(audio)
 
@@ -159,7 +159,7 @@ except KeyboardInterrupt:
     print("\nCanceled\n")
 
 except Exception as e:
-    print("Something went wrong:\n")
+    print("\nSomething went wrong:\n")
     traceback.print_exc()
     print()
 

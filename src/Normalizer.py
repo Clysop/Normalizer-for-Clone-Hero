@@ -144,8 +144,8 @@ try:
         cache_data = {}
 
         # Copy remaining files and get cache_data, skips bad files
-        for filename in (f for f in files if f not in bad_files):
-            if not os.path.isfile(new_path + '\\' + filename):
+        for filename in files:
+            if filename not in bad_files and not os.path.isfile(new_path + '\\' + filename):
                 shutil.copy(path + '\\' + filename, new_path)
 
             if filename in USED_AUDIO:

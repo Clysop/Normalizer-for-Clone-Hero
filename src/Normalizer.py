@@ -111,7 +111,8 @@ try:
         for audio, audio_path, info in audio_files:
             song = song.overlay(audio)
 
-        print("Volume: {:.1f} dB".format(song.dBFS))
+        song_gain = song.dBFS
+        print("Volume: {:.1f} dB".format(song_gain))
 
         # Create new dir
         new_path = OUTPUT_FOLDER + '\\' + path.partition('\\')[2]
@@ -120,11 +121,11 @@ try:
 
         # Apply gain and export audio files to new dir
         # Skip if song within HEADROOM dB, and copy files instead
-        if abs(GAIN - song.dBFS) > HEADROOM:
-            print("Applying {:.1f} dB of gain...".format(GAIN - song.dBFS))
+        if abs(GAIN - song_gain) > HEADROOM:
+            print("Applying {:.1f} dB of gain...".format(GAIN - song_gain))
 
             for audio, filename, info in audio_files:
-                audio = audio.apply_gain(GAIN - song.dBFS)
+                audio = audio.apply_gain(GAIN - song_gain)
 
                 print("  Exporting:", filename)
                 try:
@@ -156,7 +157,7 @@ try:
             json.dump(cache, cache_file, indent=2)
 
 except KeyboardInterrupt:
-    print("\nCanceled\n")
+    print("\nCanceled")
 
 except Exception as e:
     print("\nSomething went wrong:\n")

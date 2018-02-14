@@ -12,10 +12,12 @@ How to use:
 
 Exit with ctrl+c, or just close the window.
 
-The program will not touch your original songs, so don't worry about them getting messed up. You could back them up if you really worry, but I don't think its possible for them to get broken.
-
-The program caches the work it has done, so you can exit it whenever you want, and it will continue where it stopped next time you start it. This also means it won't scan everything again if you add new songs. If you wan't to rescan, just delete normalizer_cache.json
+The program will not touch your original songs, so don't worry about them getting messed up. It also caches the work it has done, so you can exit it whenever you want, and it will continue where it stopped next time you start it. This also means it won't scan everything again if you add new songs. If you want to rescan everything, just delete normalizer_cache.json
 
 The program will try to put everything to -16 dB, there's no way to change that. If people want it, I can add an option for it.
+
+Update: fixed some bugs. It will now skip recoding songs that are within 1 dB of the set volume, and copy them instead. This will save some time.
+
+Update 2: significantly changed the song scanning method. Should avoid making some mistakes on multifile songs. Also made it more secure against crashes. IMPORTANT: Everyone should rerun their original library with this new update. It might fix some songs that weren't processed properly. Download from the same link.
 
 The executable is generated with pyinstaller, to use the one in this repository, FFmpeg must be added to the root folder.

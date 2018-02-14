@@ -1,4 +1,4 @@
-import json, time, sys, os, shutil, glob, traceback
+import json, time, sys, os, shutil, traceback
 
 # Add local FFmpeg to path so pydub can use it
 os.environ['PATH'] = os.environ['PATH'] + ';{}\\FFmpeg\\bin;'.format(sys.path[0].rpartition('\\')[0])
@@ -86,8 +86,9 @@ try:
 
             try:
                 audio = pydub.AudioSegment.from_file(audio_path)
-            except KeyboardInterrupt: raise
-            except:
+            except KeyboardInterrupt:
+                raise
+            except pydub.exceptions.CouldntDecodeError:
                 print("    Error reading")
                 bad_files.append(filename)
                 continue
@@ -106,13 +107,9 @@ try:
         audio_files.sort(key=sort_audio, reverse=True)
 
         # Create one song from all layers
-        if len(audio_files) > 1:
-            sample_rate = int(audio_files[0][2]['sample_rate'].split('.')[0])
-            song = pydub.AudioSegment.silent(len(audio_files[0][0]), frame_rate=sample_rate)
-            for audio, audio_path, info in audio_files:
-                song = song.overlay(audio)
-        else:
-            song = audio_files[0][0]
+        song = audio_files[0][0]
+        for audio, filename, info in audio_files[1:]:
+            song = song.overlay(audio)
 
         song_gain = song.dBFS
         print("Volume: {:.1f} dB".format(song_gain))
@@ -135,9 +132,11 @@ try:
                     audio.export(new_path + '\\' + filename,
                                  format=info['format_name'],
                                  bitrate=info['bit_rate'])
-                except KeyboardInterrupt: raise
-                except:
+                except KeyboardInterrupt:
+                    raise
+                except pydub.exceptions.CouldntEncodeError:
                     print("    Error exporting")
+                    bad_files.append(filename)
 
             print()
         else:
@@ -148,7 +147,11 @@ try:
 
         # Copy remaining files and get cache_data, skips bad files
         for filename in files:
-            if filename not in bad_files and not os.path.isfile(new_path + '\\' + filename):
+            # Remove any bad exports
+            if filename in bad_files and os.path.isfile(new_path + '\\' + filename):
+                os.remove(new_path + '\\' + filename)
+            # Copy remaining files
+            elif filename not in bad_files and not os.path.isfile(new_path + '\\' + filename):
                 shutil.copy(path + '\\' + filename, new_path)
 
             if filename in USED_AUDIO:

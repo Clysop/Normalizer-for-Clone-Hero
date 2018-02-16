@@ -1,7 +1,7 @@
 # Normalizer for Clone Hero
 A small python app that normalizes the volume of a Clone Hero library
 
-#How to use:
+# How to use:
 
 1. Unpack file
 2. Move Songs folder into Normalizer folder
@@ -19,7 +19,7 @@ The program will try to put everything to -16 dB, there's no way to change that.
 
 The executable is generated with pyinstaller, to use the one in this repository, FFmpeg must be added to the root folder.
 
-#Changelog:
+# Changelog:
 
 1.3: Prints statistics (songs processed, time used, etc.) when program is stopped or when it is done.
 

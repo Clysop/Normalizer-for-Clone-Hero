@@ -1,4 +1,4 @@
-import json, time, sys, os, shutil, traceback
+import json, time, sys, os, shutil, traceback, datetime
 
 # Add local FFmpeg to path so pydub can use it
 os.environ['PATH'] = os.environ['PATH'] + ';{}\\FFmpeg\\bin;'.format(sys.path[0].rpartition('\\')[0])
@@ -22,17 +22,18 @@ for f in USED_AUDIO:
     used_audio.append(f + '.mp3')
 USED_AUDIO = used_audio
 
-# Initalize cache
-if os.path.isfile('normalizer_cache.json'):
-    with open('normalizer_cache.json',) as cache_file:
-        cache = json.load(cache_file)
-else:
-    cache = {}
-    with open('normalizer_cache.json', 'w') as cache_file:
-        json.dump(cache, cache_file, indent=2)
-
-# Start of main code
 try:
+    start_time = time.time()
+
+    # Initalize cache
+    if os.path.isfile('normalizer_cache.json'):
+        with open('normalizer_cache.json',) as cache_file:
+            cache = json.load(cache_file)
+    else:
+        cache = {}
+        with open('normalizer_cache.json', 'w') as cache_file:
+            json.dump(cache, cache_file, indent=2)
+
     # List of paths to all (subdirectories, files in that dir) that contain songs
     songs = []
 
@@ -46,6 +47,10 @@ try:
     print("Found {} songs.\n".format(len(songs)))
 
     # Analyze, apply gain, then export songs
+    processed = 0
+    copied = 0
+    skipped = 0
+    cached = 0
     for num, (path, files) in enumerate(songs):
         print("Song {}/{}:".format(num + 1, len(songs)))
         print(path)
@@ -55,6 +60,7 @@ try:
             if f in USED_AUDIO: break
         else:
             print("No audio, skipping\n")
+            skipped += 1
             continue
 
         # Scan cache for change
@@ -72,6 +78,7 @@ try:
 
         if skip:
             print("In cache, skipping\n")
+            cached += 1
             continue
 
         # List of (audiosegment, filename, mediainfo) in current song directory
@@ -139,8 +146,10 @@ try:
                     bad_files.append(filename)
 
             print()
+            processed += 1
         else:
             print("Song within {} dB, copying...\n".format(HEADROOM))
+            copied += 1
 
         # Dict of audio_filename: last modified
         cache_data = {}
@@ -163,12 +172,22 @@ try:
             json.dump(cache, cache_file, indent=2)
 
 except KeyboardInterrupt:
-    print("\nCanceled")
+    print("\nCanceled\n")
 
 except Exception as e:
     print("\nSomething went wrong:\n")
     traceback.print_exc()
     print()
 
-print("Press enter to exit")
+else:
+    print("Processing complete!\n")
+
+time_used = datetime.time(second=int(time.time() - start_time))
+print("  Processed: {:>5}".format(processed))
+print("  Copied:    {:>5}".format(copied))
+print("  Skipped:   {:>5}".format(skipped))
+print("  Cached:    {:>5}".format(cached))
+print("\nTime used:", str(time_used))
+
+print("\nPress enter to exit")
 input()

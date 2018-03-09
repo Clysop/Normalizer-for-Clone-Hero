@@ -25,7 +25,7 @@ The program will try to put everything to -16 dB, there's no option to change th
 2.0:
 - Packaged all files into the exe, the program is now one file only. Run it directly from your CH folder where your original songs folder is. You can still use your normalizer_cache, so don't delete that.
 - Fixed a bug where very big songs would crash the program, they are now skipped.
-- Fixed a bug where songs with drum stems (individual audio files for drums) wasn't processed properly, leaving the drum files untouched.
+- Fixed a bug where songs with drum stems (individual audio files for drums) weren't processed properly, leaving the drum files untouched.
 - IMPORTANT: rerun the normalizer on your original library, but use your old normalizer_cache, the program will redo all songs with drum stems.
 
 1.3: Prints statistics (songs processed, time used, etc.) when program is stopped or when it is done.

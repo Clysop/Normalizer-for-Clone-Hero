@@ -10,8 +10,8 @@ GAIN = -16
 # Skip recoding if song is HEADROOM dB within GAIN
 HEADROOM = 1
 # List of files CH uses
-USED_AUDIO = ['crowd', 'song', 'guitar', 'drums1', 'drums2',
-              'drums3', 'drums4', 'rhythm', 'vocals', 'keys']
+USED_AUDIO = ['crowd', 'song', 'guitar', 'drums', 'drums_1', 'drums_2',
+              'drums_3', 'drums_4', 'rhythm', 'vocals', 'keys']
 
 INPUT_FOLDER = 'Songs'
 OUTPUT_FOLDER = 'Normalized'
@@ -99,6 +99,10 @@ try:
                 print("    Error reading")
                 bad_files.append(filename)
                 continue
+            except MemoryError:
+                print("    This song is too damn big, can't process.")
+                bad_files.append(filename)
+                continue
 
             if len(audio) == 0:
                 print("    Zero length, skipping")
@@ -106,6 +110,11 @@ try:
                 continue
 
             audio_files.append((audio, filename, pydub.utils.mediainfo(audio_path)))
+
+        if len(audio_files) == 0:
+            print()
+            skipped += 1
+            continue
 
         # Sort audio_files so that longest audiofile is first
         def sort_audio(element):

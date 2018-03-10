@@ -111,54 +111,55 @@ try:
 
             audio_files.append((audio, filename, pydub.utils.mediainfo(audio_path)))
 
-        if len(audio_files) == 0:
+        new_path = OUTPUT_FOLDER + '\\' + path.partition('\\')[2]
+
+        if len(audio_files) > 0:
+            # Sort audio_files so that longest audiofile is first
+            def sort_audio(element):
+                return len(element[0])
+
+            audio_files.sort(key=sort_audio, reverse=True)
+
+            # Create one song from all layers
+            song = audio_files[0][0]
+            for audio, filename, info in audio_files[1:]:
+                song = song.overlay(audio)
+
+            song_gain = song.dBFS
+            print("Volume: {:.1f} dB".format(song_gain))
+
+            # Create new dir
+            if not os.path.isdir(new_path):
+                os.makedirs(new_path)
+
+            # Apply gain and export audio files to new dir
+            # Skip if song within HEADROOM dB, and copy files instead
+            if abs(GAIN - song_gain) > HEADROOM:
+                print("Applying {:.1f} dB of gain...".format(GAIN - song_gain))
+
+                for audio, filename, info in audio_files:
+                    audio = audio.apply_gain(GAIN - song_gain)
+
+                    print("  Exporting:", filename)
+                    try:
+                        audio.export(new_path + '\\' + filename,
+                                     format=info['format_name'],
+                                     bitrate=info['bit_rate'])
+                    except KeyboardInterrupt:
+                        raise
+                    except pydub.exceptions.CouldntEncodeError:
+                        print("    Error exporting")
+                        bad_files.append(filename)
+
+                print()
+                processed += 1
+            else:
+                print("Song within {} dB, copying...\n".format(HEADROOM))
+                copied += 1
+
+        else:
             print()
             skipped += 1
-            continue
-
-        # Sort audio_files so that longest audiofile is first
-        def sort_audio(element):
-            return len(element[0])
-
-        audio_files.sort(key=sort_audio, reverse=True)
-
-        # Create one song from all layers
-        song = audio_files[0][0]
-        for audio, filename, info in audio_files[1:]:
-            song = song.overlay(audio)
-
-        song_gain = song.dBFS
-        print("Volume: {:.1f} dB".format(song_gain))
-
-        # Create new dir
-        new_path = OUTPUT_FOLDER + '\\' + path.partition('\\')[2]
-        if not os.path.isdir(new_path):
-            os.makedirs(new_path)
-
-        # Apply gain and export audio files to new dir
-        # Skip if song within HEADROOM dB, and copy files instead
-        if abs(GAIN - song_gain) > HEADROOM:
-            print("Applying {:.1f} dB of gain...".format(GAIN - song_gain))
-
-            for audio, filename, info in audio_files:
-                audio = audio.apply_gain(GAIN - song_gain)
-
-                print("  Exporting:", filename)
-                try:
-                    audio.export(new_path + '\\' + filename,
-                                 format=info['format_name'],
-                                 bitrate=info['bit_rate'])
-                except KeyboardInterrupt:
-                    raise
-                except pydub.exceptions.CouldntEncodeError:
-                    print("    Error exporting")
-                    bad_files.append(filename)
-
-            print()
-            processed += 1
-        else:
-            print("Song within {} dB, copying...\n".format(HEADROOM))
-            copied += 1
 
         # Dict of audio_filename: last modified
         cache_data = {}

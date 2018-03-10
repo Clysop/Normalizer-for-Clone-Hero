@@ -14,7 +14,7 @@ A small python app that normalizes the volume of a Clone Hero library
 
 Exit with ctrl+c, or just close the window.
 
-You should rescan your songs in clone hero. This should be fast, but it might say "reading charts" for a while, this is normal.
+You should rescan your songs in clone hero. This should be fast, but it might say "updating charts" for a while, this is normal.
 
 The program will not touch your original songs, so don't worry about them getting messed up. It also caches the work it has done, so you can exit it whenever you want, and it will continue where it stopped next time you start it. This also means it won't scan everything again if you add new songs. If you want to rescan everything, just delete normalizer_cache.json
 

@@ -22,6 +22,8 @@ The program will try to put everything to -16 dB, there's no option to change th
 
 # Changelog:
 
+2.1: Fixed a cache bug. Program should be more robust now and handle songs that are broken in various ways.
+
 2.0:
 - Packaged all files into the exe, the program is now one file only. Run it directly from your CH folder where your original songs folder is. You can still use your normalizer_cache, so don't delete that.
 - Fixed a bug where very big songs would crash the program, they are now skipped.

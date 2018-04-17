@@ -1,13 +1,16 @@
 import os
-import ffmpy
 import json
 import subprocess
+
+import ffmpy
 
 IMPORT_WIDTH = 16
 
 
 class Audio():
     def __init__(self, filename):
+        assert type(filename) is str, "{} is not a string".format(filename)
+
         self.filename = filename
         self.data = None
         self.info = {}
@@ -20,23 +23,32 @@ class Audio():
 
         self.info = json.loads(out)['streams'][0]
 
-    def load(self, path):
-        ff = ffmpy.FFmpeg(global_options='-y',
+    def load(self, path, debug=False):
+        if debug:
+            output = None
+        else:
+            output = subprocess.PIPE
+
+        ff = ffmpy.FFmpeg(global_options='-y -loglevel error -stats',
                           inputs={os.path.join(path, self.filename): ''},
                           outputs={'pipe:1': '-f s{}le'.format(IMPORT_WIDTH)})
         try:
-            self.data, err = ff.run(stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+            self.data, err = ff.run(stdout=subprocess.PIPE, stderr=output)
         except ffmpy.FFRuntimeError:
             return False
 
         return True
 
-    def export(self, path, gain):
+    def export(self, path, gain=0, debug=False):
+        if debug:
+            output = None
+        else:
+            output = subprocess.PIPE
+
         sr = self.info['sample_rate']
         br = self.info['bit_rate']
 
-        ff = ffmpy.FFmpeg(global_options='-y',
+        ff = ffmpy.FFmpeg(global_options='-y -loglevel error -stats',
                           inputs={'pipe:0': '-f s{}le \
                                   -ac 2 -ar {}'.format(IMPORT_WIDTH, sr)},
                           outputs={os.path.join(path, self.filename):
@@ -46,7 +58,7 @@ class Audio():
         try:
             out, err = ff.run(input_data=self.data,
                               stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE)
+                              stderr=output)
         except ffmpy.FFRuntimeError:
             return False
 

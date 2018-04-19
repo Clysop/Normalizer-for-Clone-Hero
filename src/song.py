@@ -66,26 +66,27 @@ class Song():
             return False
 
     def _combine_audio(self):
+        if len(self.files) == 1:
+            return self.files[0].data
+
         longest = 0
         for file in self.files:
             if len(file.data) > longest:
                 longest = len(file.data)
 
-        if len(self.files) > 1:
-            combined = bytes(longest)
-            for file in self.files:
-                new_data = file.data + bytes(longest - len(file.data))
-                combined = audioop.add(combined, new_data,
-                                       int(IMPORT_WIDTH/8))
+        combined = bytes(longest)
+        for file in self.files:
+            data = file.data + bytes(longest - len(file.data))
+            combined = audioop.add(combined, data, int(IMPORT_WIDTH/8))
 
-            return combined
-        else:
-            return self.files[0].data
+        return combined
 
     def get_volume(self):
         data = self._combine_audio()
-        return 20 * math.log(audioop.rms(data, int(
-             IMPORT_WIDTH/8))/2**(IMPORT_WIDTH-1), 10)
+        rms_float = audioop.rms(data, int(IMPORT_WIDTH / 8)) \
+            / (2 ** (IMPORT_WIDTH - 1) - 1)
+
+        return 20 * math.log(rms_float, 10)
 
     def copy(self, path, audio=True):
         cache_data = {}
@@ -117,11 +118,11 @@ class Song():
         else:
             return False
 
-    def export_combined(self):
+    def export_combined(self, path):
         print("Exporting combined.")
         data = self._combine_audio()
 
         a = Audio('combined.ogg')
         a.info = self.files[0].info
         a.data = data
-        a.export(self.path, -10)
+        a.export(path)

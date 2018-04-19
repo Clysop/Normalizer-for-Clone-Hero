@@ -109,7 +109,7 @@ class Normalizer():
             if chart_exists or mid_exists:
                 songs.append(Song(root))
 
-        songs.sort(key=lambda s: s.path)
+        # songs.sort(key=lambda s: s.path)
         return songs
 
     def _process_song(self, song):
@@ -120,28 +120,25 @@ class Normalizer():
             return 2
 
         if not song.load_files(indent=2, debug=DEBUG_LOAD):
-            print("  Couldn't load any audio, skipping.")
+            print("\n  Couldn't load any audio, skipping.")
             return -1
+
+        new_path = os.path.join(OUTPUT_FOLDER, song.path.partition('\\')[2])
+        if not os.path.isdir(new_path):
+            os.makedirs(new_path)
 
         volume = song.get_volume()
         print('\n  Volume: {:.1f} dBFS.'.format(volume))
 
-        new_path = os.path.join(OUTPUT_FOLDER, song.path.partition('/')[2])
-        if not os.path.isdir(new_path):
-            os.makedirs(new_path)
-
         exported = True
-
         gain_diff = TARGET_GAIN - volume
         if abs(gain_diff) > HEADROOM:
             print("  Applying {:.1f} dB of gain.\n".format(gain_diff))
             if not song.export(new_path, gain_diff,
                                indent=2, debug=DEBUG_EXPORT):
-                print("  Couldn't export any audio, skipping.")
+                print("\n  Couldn't export any audio, skipping.")
                 shutil.rmtree(new_path)
                 return -2
-
-            exported = True
         else:
             print("  Song within {} dB of target, copying files.".format(
                 HEADROOM))
@@ -191,7 +188,7 @@ class Normalizer():
     def _run(self, start_time):
         for i, s in enumerate(self.songs):
             time_used = int(time.time() - start_time)
-            print("Song {}/{}".format(i, self.num_songs))
+            print("Song {}/{}".format(i + 1, self.num_songs))
             print("Time:", datetime.timedelta(seconds=time_used))
             print(s.path)
 
@@ -204,12 +201,21 @@ class Normalizer():
             print()
 
     def _run_mp(self):
+        start = 0
+        for i, s in enumerate(self.songs):
+            if s.path in self.cache and s.check_cache(self.cache[s.path]):
+                print("In cache:", s.path)
+                self.num_cached += 1
+            else:
+                start = i
+                break
+
         queue = multiprocessing.Queue()
         with multiprocessing.Pool(initializer=self._init_mp,
                                   initargs=(queue,)) as pool:
-            pool.map_async(self._process_song_mp, self.songs, 1)
+            pool.map_async(self._process_song_mp, self.songs[start:], 1)
 
-            num_processed = 0
+            num_processed = self.num_cached
             while num_processed < self.num_songs:
                 data = queue.get()
 
@@ -238,9 +244,10 @@ class Normalizer():
 
             self._load_config(CONFIG_FILENAME)
             self.cache = self._load_cache(CACHE_FILENAME)
+
+            print("Finding songs...")
             self.songs = self._find_songs(INPUT_FOLDER)
             self.num_songs = len(self.songs)
-
             print("Found {} songs.\n".format(self.num_songs))
 
             if MULTITHREADING:
@@ -273,4 +280,5 @@ class Normalizer():
 
 
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
     Normalizer().run()

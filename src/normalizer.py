@@ -50,33 +50,37 @@ class Normalizer():
         global TARGET_GAIN, HEADROOM, DEBUG_LOAD, DEBUG_EXPORT, MULTITHREADING
 
         default_config = configparser.ConfigParser()
-        default_config['DEFAULT'] = {'target volume': TARGET_GAIN,
-                                     'headroom': HEADROOM,
-                                     'load debug': DEBUG_LOAD,
-                                     'export debug': DEBUG_EXPORT,
-                                     'multithreading': MULTITHREADING,
-                                     }
+        default_config['DEFAULT'] = {
+            'target volume': TARGET_GAIN,
+            'headroom': HEADROOM,
+            'load debug': DEBUG_LOAD,
+            'export debug': DEBUG_EXPORT,
+            'multithreading': MULTITHREADING,
+        }
 
         if os.path.isfile(filename):
-            config = configparser.ConfigParser()
-            config.read(filename)
             try:
+                config = configparser.ConfigParser()
+                config.read(filename)
+
                 assert 'DEFAULT' in config
                 for key in default_config['DEFAULT']:
                     assert key in config['DEFAULT']
 
-                TARGET_GAIN = int(config['DEFAULT']['target volume'])
-                HEADROOM = int(config['DEFAULT']['headroom'])
-                DEBUG_LOAD = config['DEFAULT']['load debug'] == 'True'
-                DEBUG_EXPORT = config['DEFAULT']['export debug'] == 'True'
-                MULTITHREADING = config['DEFAULT']['multithreading'] == 'True'
+                assert int(config['DEFAULT']['target volume']) < 0
+                assert int(config['DEFAULT']['headroom']) >= 0
             except Exception:
                 print("Bad config, remaking.\n")
                 config = default_config
                 with open(filename, 'w') as cf:
                     config.write(cf)
+
+            TARGET_GAIN = int(config['DEFAULT']['target volume'])
+            HEADROOM = int(config['DEFAULT']['headroom'])
+            DEBUG_LOAD = config['DEFAULT']['load debug'] == 'True'
+            DEBUG_EXPORT = config['DEFAULT']['export debug'] == 'True'
+            MULTITHREADING = config['DEFAULT']['multithreading'] == 'True'
         else:
-            default_config
             with open(filename, 'w') as cf:
                 default_config.write(cf)
 
@@ -96,10 +100,10 @@ class Normalizer():
         with open(filename, 'w') as cache_file:
             json.dump(self.cache, cache_file, indent=2)
 
-    def _find_songs(self):
+    def _find_songs(self, folder):
         songs = []
 
-        for root, dirs, files in os.walk(INPUT_FOLDER):
+        for root, dirs, files in os.walk(folder):
             chart_exists = os.path.isfile(os.path.join(root, 'notes.chart'))
             mid_exists = os.path.isfile(os.path.join(root, 'notes.mid'))
             if chart_exists or mid_exists:
@@ -113,12 +117,10 @@ class Normalizer():
 
         if song.path in self.cache and song.check_cache(self.cache[song.path]):
             print("  Song in cache, skipping.")
-            self.num_cached += 1
             return 2
 
         if not song.load_files(indent=2, debug=DEBUG_LOAD):
             print("  Couldn't load any audio, skipping.")
-            self.num_errors += 1
             return -1
 
         volume = song.get_volume()
@@ -136,17 +138,14 @@ class Normalizer():
             if not song.export(new_path, gain_diff,
                                indent=2, debug=DEBUG_EXPORT):
                 print("  Couldn't export any audio, skipping.")
-                self.num_errors += 1
                 shutil.rmtree(new_path)
                 return -2
 
-            self.num_export += 1
             exported = True
         else:
             print("  Song within {} dB of target, copying files.".format(
                 HEADROOM))
             song.copy(new_path)
-            self.num_copied += 1
             exported = False
 
         song.copy(new_path, audio=False)
@@ -178,6 +177,17 @@ class Normalizer():
         global queue
         queue = q
 
+    def _update_num(self, result):
+        num = {
+            0: 'num_export',
+            1: 'num_copied',
+            2: 'num_cached',
+            -1: 'num_errors',
+            -2: 'num_errors',
+        }
+
+        setattr(self, num[result], getattr(self, num[result]) + 1)
+
     def _run(self, start_time):
         for i, s in enumerate(self.songs):
             time_used = int(time.time() - start_time)
@@ -185,40 +195,42 @@ class Normalizer():
             print("Time:", datetime.timedelta(seconds=time_used))
             print(s.path)
 
-            if self._process_song(s) != 2:
+            result = self._process_song(s)
+
+            self._update_num(result)
+            if result != 2:
                 self._write_cache(CACHE_FILENAME, s.path, s.cache_data)
+
             print()
 
     def _run_mp(self):
         queue = multiprocessing.Queue()
         with multiprocessing.Pool(initializer=self._init_mp,
                                   initargs=(queue,)) as pool:
-            result = pool.map_async(self._process_song_mp, self.songs, 1)
+            pool.map_async(self._process_song_mp, self.songs, 1)
 
-            while not (result.ready() and queue.empty()):
+            num_processed = 0
+            while num_processed < self.num_songs:
                 data = queue.get()
 
                 if isinstance(data, ExceptionWrapper):
                     data.re_raise()
-                else:
-                    r, path, cache_data = data
-                    if r == 0:
-                        self.num_export += 1
-                    elif r == 1:
-                        self.num_copied += 1
-                    elif r == 2:
-                        self.num_cached += 1
-                    elif r == -1:
-                        self.num_errors += 1
-                        print("\n{}\nError, couldn't load audio\n".format(
-                            path))
-                    elif r == -2:
-                        self.num_errors += 1
-                        print("\n{}\nError, couldn't export audio\n".format(
-                            path))
 
-                    if r != 2:
-                        self._write_cache(CACHE_FILENAME, path, cache_data)
+                r, path, cache_data = data
+                self._update_num(r)
+
+                if r == -1:
+                    print("\n{}\n  "
+                          "Error, couldn't load audio\n".format(path))
+                elif r == -2:
+                    print("\n{}\n  "
+                          "Error, couldn't export audio\n".format(path))
+
+                if r != 2:
+                    self._write_cache(CACHE_FILENAME, path, cache_data)
+
+                num_processed = self.num_cached + self.num_copied \
+                    + self.num_errors + self.num_export
 
     def run(self):
         try:
@@ -226,7 +238,7 @@ class Normalizer():
 
             self._load_config(CONFIG_FILENAME)
             self.cache = self._load_cache(CACHE_FILENAME)
-            self.songs = self._find_songs()
+            self.songs = self._find_songs(INPUT_FOLDER)
             self.num_songs = len(self.songs)
 
             print("Found {} songs.\n".format(self.num_songs))

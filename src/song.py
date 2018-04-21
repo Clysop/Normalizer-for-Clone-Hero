@@ -55,8 +55,8 @@ class Song():
     def load_files(self, indent=0, debug=False):
         for a in self.files.copy():
             print(' ' * indent + "Loading {}...".format(a.filename))
-            a.probe(self.path)
-            if not a.load(self.path, debug=debug):
+            probe = a.probe(self.path)
+            if not (probe and a.load(self.path, debug=debug)):
                 print(' ' * indent * 2 + 'Error, skipping')
                 self.files.remove(a)
 
@@ -66,7 +66,9 @@ class Song():
             return False
 
     def _combine_audio(self):
-        if len(self.files) == 1:
+        if len(self.files) == 0:
+            return None
+        elif len(self.files) == 1:
             return self.files[0].data
 
         longest = 0
@@ -83,10 +85,13 @@ class Song():
 
     def get_volume(self):
         data = self._combine_audio()
-        rms_float = audioop.rms(data, int(IMPORT_WIDTH / 8)) \
-            / (2 ** (IMPORT_WIDTH - 1) - 1)
+        rms = audioop.rms(data, int(IMPORT_WIDTH / 8))
 
-        return 20 * math.log(rms_float, 10)
+        if rms == 0:
+            return -math.inf
+        else:
+            rms_float = rms / (2 ** (IMPORT_WIDTH - 1) - 1)
+            return 20 * math.log(rms_float, 10)
 
     def copy(self, path, audio=True):
         cache_data = {}

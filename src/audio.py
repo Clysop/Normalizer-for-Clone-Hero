@@ -25,9 +25,14 @@ class Audio():
                               global_options='-show_streams -of json',
                               inputs={os.path.join(path, self.filename): ''})
 
-        out, err = probe.run(stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            out, err = probe.run(stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+        except ffmpy.FFRuntimeError:
+            return False
 
         self.info = json.loads(out)['streams'][0]
+        return True
 
     def load(self, path, debug=False):
         if debug:
@@ -52,16 +57,16 @@ class Audio():
         else:
             output = subprocess.PIPE
 
-        sr = self.info['sample_rate']
-        br = self.info['bit_rate']
+        sr = self.info.get('sample_rate', '44.1k')
+        br = self.info.get('bit_rate', '192k')
 
         ff = ffmpy.FFmpeg(executable=FFMPEG_PATH,
                           global_options='-y -loglevel error -stats',
-                          inputs={'pipe:0': '-f s{}le \
-                                  -ac 2 -ar {}'.format(IMPORT_WIDTH, sr)},
+                          inputs={'pipe:0': '-f s{}le '
+                                  '-ac 2 -ar {}'.format(IMPORT_WIDTH, sr)},
                           outputs={os.path.join(path, self.filename):
-                                   '-ar {} -b:a {} -filter:a \
-                                   "volume={}dB"'.format(sr, br, gain)})
+                                   '-ar {} -b:a {} -filter:a '
+                                   '"volume={}dB"'.format(sr, br, gain)})
 
         try:
             out, err = ff.run(input_data=self.data,

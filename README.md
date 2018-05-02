@@ -18,9 +18,14 @@ You should rescan your songs in clone hero. This should be fast, but it might sa
 
 The program will not touch your original songs, so don't worry about them getting messed up. It also caches the work it has done, so you can exit it whenever you want, and it will continue where it stopped next time you start it. This also means it won't scan everything again if you add new songs. If you want to rescan everything, just delete normalizer_cache.json
 
-The program will try to put everything to -16 dB, there's no option to change that. If people want it, I can add an option for it.
-
 # Changelog:
+
+3.0:
+- Complete rewrite. Huge performance increase.
+- Now integrates more directly with FFmpeg, which increases efficiency.
+- Multithreading has been added, which will make the program process a song for each core your CPU has. If you have a 4-core CPU, the program will be 4 times faster.
+- A config file will be generated the first time you run the program. Here you can set the target volume, the headroom for copying instead of recoding the audio, enabling debug info when loading and/or exporting, and set multithreading. Warning: debug only works when multithreading is set to False, as multithreading disables much of the output when processing.
+- A crash log will be saved if the program crashes, making it easier to report it to me so I can fix it.
 
 2.1: Fixed a cache bug. Program should be more robust now and handle songs that are broken in various ways.
 

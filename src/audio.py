@@ -41,7 +41,7 @@ class Audio():
             path (str): directory that self.filename should be searched for
 
         Returns:
-            True if successful, False otherwise.
+            bool: True if successful, False otherwise.
         """
         probe = ffmpy.FFprobe(executable=FFPROBE_PATH,
                               global_options='-show_streams -of json',
@@ -67,7 +67,7 @@ class Audio():
             debug (bool):   whether FFmpeg should output info when loading.
 
         Return:
-            True if successful, False otherwise.
+            bool: True if successful, False otherwise.
         """
         if debug:
             output = None
@@ -97,7 +97,7 @@ class Audio():
             debug (bool):   whether FFmpeg should output info when exporting.
 
         Returns:
-            True if successful, False otherwise.
+            bool: True if successful, False otherwise.
         """
         if debug:
             output = None

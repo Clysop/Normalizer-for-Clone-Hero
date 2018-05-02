@@ -1,6 +1,6 @@
 """Implements the Song class.
 
-Written by Clysop.bin
+Written by Clysop.
 """
 
 import os
@@ -32,7 +32,7 @@ def list_files(path, used=True):
                         False to list other files.
 
     Yields:
-        filename (str): filename
+        str: filename
     """
     for filename in os.listdir(path):
         file_exists = os.path.isfile(os.path.join(path, filename))
@@ -69,7 +69,7 @@ class Song():
             data (dict): timestamp data for files in self.path
 
         Returns:
-            True if data is newer than self.cache_data, False otherwise.
+            bool: True if data is newer than self.cache_data, False otherwise.
         """
         for filename in self.cache_data:
             if filename not in data or \
@@ -100,7 +100,7 @@ class Song():
             debug (bool):   whether FFmpeg should output info when loading.
 
         Returns:
-            True if any audio was loaded, False otherwise.
+            bool: True if any audio was loaded, False otherwise.
         """
         for a in self.files.copy():
             print(' ' * indent + "Loading {}...".format(a.filename))
@@ -205,6 +205,11 @@ class Song():
             return False
 
     def export_combined(self, path):
+        """Exports an audiofile that is all the imported audio combined.
+
+        Args:
+            path (str): path where file should be exported to.
+        """
         print("Exporting combined.")
         data = self._combine_audio()
 

@@ -257,10 +257,16 @@ class Normalizer():
         # Skip all songs that are found in cache until uncached song is found.
         start = 0
         for i, s in enumerate(self.songs):
+            s.scan_files()
             if s.path in self.cache and s.check_cache(self.cache[s.path]):
                 print("In cache:", s.path)
                 self.num_cached += 1
             else:
+                # Remove scanned files, as they are scanned when the song
+                # is processed.
+                s.files = []
+                s.cache_data = {}
+
                 start = i
                 break
 

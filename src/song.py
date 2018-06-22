@@ -125,12 +125,23 @@ class Song():
         # Find length of longest audiofile.
         longest = 0
         for file in self.files:
-            if len(file.data) > longest:
-                longest = len(file.data)
+            length = len(file.data)
+            if file.info.get('channels', 2) == 1:
+                # Mono segments will be doubled when converted to stereo.
+                length *= 2
+
+            if length > longest:
+                longest = length
 
         combined = bytes(longest)
         for file in self.files:
-            data = file.data + bytes(longest - len(file.data))
+            data = file.data
+
+            # Convert to stereo if mono.
+            if file.info.get('channels', 2) == 1:
+                data = audioop.tostereo(data, int(IMPORT_WIDTH/8), 1, 1)
+
+            data += bytes(longest - len(data))
             combined = audioop.add(combined, data, int(IMPORT_WIDTH/8))
 
         return combined

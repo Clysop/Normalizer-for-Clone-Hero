@@ -108,8 +108,13 @@ class Normalizer():
     def _load_cache(self, filename):
         """Loads a cache file. Creates one if none are found."""
         if os.path.isfile(filename):
-            with open(filename) as cache_file:
-                return json.load(cache_file)
+            try:
+                with open(filename) as cache_file:
+                    return json.load(cache_file)
+            except Exception:
+                print("Couldn't read cache file. Delete normalizer_cache.json")
+                input("\nPress enter to exit\n")
+                sys.exit()
         else:
             cache = {}
             with open(filename, 'w') as cache_file:
@@ -121,7 +126,12 @@ class Normalizer():
         """Writes new info to cache and cachefile."""
         self.cache[path] = data
         with open(filename, 'w') as cache_file:
-            json.dump(self.cache, cache_file, indent=2)
+            try:
+                json.dump(self.cache, cache_file, indent=2)
+            except:
+                # Try writing again if the first time was interrupted.
+                json.dump(self.cache, cache_file, indent=2)
+                raise
 
     def _find_songs(self, folder):
         """Finds all folders that contain a notes file, i.e. all songs."""

@@ -20,6 +20,10 @@ The program will not touch your original songs, so don't worry about them gettin
 
 # Changelog:
 
+3.1:
+- Fixed some bugs.
+- Songs with audio segments in mono will no longer be messed up. This fixes the problem some had with some tracks being sped up.
+
 3.0:
 - Complete rewrite. Huge performance increase.
 - Now integrates more directly with FFmpeg, which increases efficiency.

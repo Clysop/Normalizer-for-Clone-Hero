@@ -20,6 +20,9 @@ The program will not touch your original songs, so don't worry about them gettin
 
 # Changelog:
 
+3.2:
+- Fixed cache bug. The program will now tell the user when it couldn't read the cache file.
+
 3.1:
 - Fixed some bugs.
 - Songs with audio segments in mono will no longer be messed up. This fixes the problem some had with some tracks being sped up.

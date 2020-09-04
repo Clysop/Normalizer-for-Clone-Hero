@@ -167,7 +167,7 @@ class Normalizer():
             return -1
 
         # Create new song folder if it doesn't exist.
-        new_path = os.path.join(OUTPUT_FOLDER, song.path.partition('\\')[2])
+        new_path = os.path.join(OUTPUT_FOLDER, song.path.partition(os.path.sep)[2])
         if not os.path.isdir(new_path):
             os.makedirs(new_path)
 

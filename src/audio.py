@@ -13,9 +13,13 @@ import ffmpy
 # Bit width raw audio should be stored as when loaded.
 IMPORT_WIDTH = 16
 
-path = sys.path[0].rpartition('\\')[0]
-FFMPEG_PATH = os.path.join(path, 'FFmpeg/ffmpeg.exe')
-FFPROBE_PATH = os.path.join(path, 'FFmpeg/ffprobe.exe')
+if os.name == 'nt':
+    path = sys.path[0].rpartition('\\')[0]
+    FFMPEG_PATH = os.path.join(path, 'FFmpeg/ffmpeg.exe')
+    FFPROBE_PATH = os.path.join(path, 'FFmpeg/ffprobe.exe')
+else:
+    FFMPEG_PATH = "ffmpeg"
+    FFPROBE_PATH = "ffprobe"
 
 
 class Audio():

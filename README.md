@@ -1,16 +1,26 @@
-# Normalizer for Clone Hero
+# Normalizer for Clone Hero - Multi Platform Version
 A small python app that normalizes the volume of a Clone Hero library
 
-# How to use:
+# How to Run:
+
+## Windows:
 
 1. Unpack file
 2. Move Normalizer.exe to Clone Hero folder (where Songs folder is)
 3. Run Normalizer.exe
-4. Wait
-5. ...
-6. Wait
-7. After it is done, rename Songs folder to something else (e.g. Original Songs)
-8. Rename Normalized to Songs. These are now your new, normalized songs.
+
+## Mac:
+1. Clone repository
+2. Open Terminal and run (replace `CHECKOUT_PATH` with where the repository is):
+```bash
+cd ~/Library/Application Support/com.srylain.CloneHero/
+python CHECKOUT_PATH/src/normalizer.py
+```
+
+# After Running:
+
+1. Rename Songs folder to something else (e.g. Original Songs)
+2. Rename Normalized to Songs. These are now your new, normalized songs.
 
 Exit with ctrl+c, or just close the window.
 
